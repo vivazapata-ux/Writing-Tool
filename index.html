@@ -425,7 +425,8 @@
                 <div style="margin-top:30px; border-top:1px solid var(--border-color); padding-top:20px; text-align:center;">
                     <div style="font-size:14px; color:var(--text-muted); margin-bottom:15px;" data-key="lbl_or_import">Or restore a project from backup:</div>
                     <button class="btn btn-gold" onclick="document.getElementById('importProjFile').click()">📂 <span data-key="btn_import_proj">Load Backup (.json)</span></button>
-                    <input type="file" id="importProjFile" style="display:none" onchange="importProject(this)">
+                    <!-- YENİ: JSON Dosyaları için 'accept' eklendi -->
+                    <input type="file" id="importProjFile" style="display:none" accept=".json" onchange="importProject(this)">
                 </div>
             </div>
         </div>
