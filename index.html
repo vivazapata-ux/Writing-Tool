@@ -2,35 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- iOS için viewport ayarı -->
+    <!-- iOS ve PWA Ayarları -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#fdfbf7">
     <title>Writing Tool</title>
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiV3JpdGluZyBUb29sIiwiXHNob3J0X25hbWUiOiJXcml0aW5nVG9vbCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZmRmYmY3IiwidGhlbWVfY29sb3IiOiIjM2E2ZWE1IiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
+
     <!-- 
         =============================================
-        GOOGLE ADSENSE SCRIPT ALANI (AD SPACE - HEAD)
+        GOOGLE ADSENSE
         =============================================
-        AdSense onayından sonra size verilen <script> kodunu buraya yapıştırın.
-        Paste your Google AdSense <script> code here after approval.
     -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4105263661615439" crossorigin="anonymous"></script>
 
-    <!-- SortableJS Kütüphanesi -->
+    <!-- Kütüphaneler -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <!-- Fontlar: Inter ve Merriweather -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* Renk Paleti */
+            /* Gündüz Modu (Varsayılan) */
             --bg-color: #fdfbf7;      
-            --text-color: #1e293b;    
+            --text-color: #1e293b;
+            --text-muted: #64748b;    
             --primary-blue: #3a6ea5;  
             --primary-gold: #cfa15c;  
             --card-bg: #ffffff;
             --border-color: #e2e8f0;
+            --input-bg: #fcfcfc;
             --danger: #ef4444;
             --success: #10b981;
+            --modal-overlay: rgba(0,0,0,0.6);
             --scale-factor: 1; 
+        }
+
+        /* Gece Modu (Dark Mode) */
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e2e2e2;
+            --text-muted: #a0a0a0;
+            --primary-blue: #64b5f6;
+            --primary-gold: #ffd54f;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            --input-bg: #2c2c2c;
+            --modal-overlay: rgba(0,0,0,0.8);
         }
 
         body {
@@ -45,27 +65,21 @@
             flex-direction: column;
             touch-action: manipulation;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- REKLAM ALANLARI İÇİN CSS (AD STYLES) --- */
-        .ad-banner {
-            width: 100%;
-            text-align: center;
-            background: transparent;
-            min-height: 0; 
-            overflow: hidden;
-            flex-shrink: 0; 
+        /* --- ÜST KONTROLLER (Anasayfa Simetrik) --- */
+        .top-controls-right {
+            position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px;
         }
-        .ad-banner ins { margin: 0 auto; }
+        .top-controls-left {
+            position: absolute; top: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px;
+        }
 
-        /* --- DİL DEĞİŞTİRİCİ (HOME ONLY) --- */
-        .lang-switcher {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
+        /* Hap Şekilli Kontrol Kutusu (Ortak Stil) */
+        .control-pill {
+            background: var(--card-bg);
+            padding: 6px 12px;
             border-radius: 20px;
             border: 1px solid var(--border-color);
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -74,27 +88,23 @@
             gap: 8px;
             font-size: 13px;
             font-weight: 600;
-            white-space: nowrap; /* Metnin kaymasını engeller */
+            color: var(--text-color);
+            cursor: pointer; /* Tıklanabilir yap */
         }
-        .lang-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 2px;
-            border-radius: 4px;
-            opacity: 0.5;
-            transition: opacity 0.2s, transform 0.2s;
+
+        .icon-btn-text {
+            background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px;
+            transition: transform 0.2s; color: var(--text-color);
         }
-        .lang-btn:hover { opacity: 1; transform: scale(1.1); }
-        .lang-btn.active { opacity: 1; border-bottom: 2px solid var(--primary-blue); }
+        .icon-btn-text:hover { transform: scale(1.1); }
+        .icon-btn-text.active { color: var(--primary-blue); font-weight: bold; border-bottom: 2px solid var(--primary-blue); }
 
         /* --- ORTAK BUTONLAR --- */
         .btn {
             padding: 8px 16px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-            background: white;
+            background: var(--card-bg);
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
@@ -107,373 +117,218 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             -webkit-tap-highlight-color: transparent;
         }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .btn:active { transform: translateY(0); }
-        
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); filter: brightness(0.95); }
         .btn-primary { background: var(--primary-blue); color: white; border: none; }
-        .btn-primary:hover { background: #2c5282; }
-        
         .btn-gold { background: var(--primary-gold); color: white; border: none; }
-        .btn-gold:hover { background: #b08d55; }
+        .btn-danger { background: var(--danger); color: white; border: none; }
+        .btn-success { background: var(--success); color: white; border: none; }
 
-        .btn-danger { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
-        .btn-danger:hover { background: #fecaca; }
-
-        /* --- GÖRÜNÜM YÖNETİMİ --- */
+        /* --- SAYFALAR --- */
         .view-section { display: none; height: 100%; width: 100%; position: relative; }
         .view-section.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease-in-out; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- ANASAYFA --- */
-        #view-home { 
-            align-items: center; 
-            justify-content: center; 
-            background: var(--bg-color);
-            overflow-y: auto;
-            padding: 20px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .home-container {
-            width: 100%;
-            max-width: 700px;
-            text-align: center;
-            padding: 40px;
-        }
-
-        /* Logo Alanı */
-        .logo-area svg {
-            width: 140px;
-            height: 140px;
-            margin-bottom: 25px;
-            filter: drop-shadow(0 8px 16px rgba(58, 110, 165, 0.15));
-        }
-
-        .home-title {
-            font-size: 32px;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-        }
-
-        .home-subtitle {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--primary-gold);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 25px;
-            position: relative;
-            display: inline-block;
-            padding-bottom: 10px;
-        }
+        /* ANASAYFA */
+        #view-home { align-items: center; justify-content: center; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
+        .home-container { width: 100%; max-width: 800px; text-align: center; padding: 40px 20px; }
+        .logo-area svg { width: 140px; height: 140px; margin-bottom: 25px; filter: drop-shadow(0 8px 16px rgba(58, 110, 165, 0.15)); }
         
-        .home-subtitle::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background-color: var(--primary-gold);
-            border-radius: 2px;
-        }
+        /* Anasayfa Başlık (Büyütüldü) */
+        .home-title { font-size: 42px; font-weight: 900; letter-spacing: -1px; margin: 0 0 30px 0; color: var(--text-color); }
 
-        .home-description {
-            font-family: 'Merriweather', serif;
-            font-size: 15px;
-            line-height: 1.8;
-            color: #475569;
-            margin-bottom: 40px;
-            text-align: justify;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .home-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
-        }
-
-        .big-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 200px;
-            height: 100px;
-            border-radius: 16px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            text-transform: uppercase;
-            font-weight: 700;
-            font-size: 16px;
-            gap: 10px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .big-btn svg { width: 32px; height: 32px; opacity: 0.9; }
-        .big-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
-        
+        /* Anasayfa Butonlar (Yukarı Taşındı) */
+        .home-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 50px; }
+        .big-btn { width: 200px; height: 100px; border-radius: 16px; border: none; cursor: pointer; color: white; font-weight: 700; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .big-btn:hover { transform: translateY(-5px); }
         .btn-projects { background: linear-gradient(135deg, #3a6ea5 0%, #2c5282 100%); }
         .btn-new { background: linear-gradient(135deg, #cfa15c 0%, #b08d55 100%); }
-
-        /* --- ÇALIŞMA MASASI --- */
-        .workspace-header {
-            background: white; 
-            padding: 0 20px; 
-            border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            height: 64px; flex-shrink: 0; z-index: 10;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        
+        /* Alt Başlık ve Açıklama (Aşağı Taşındı ve Küçültüldü) */
+        .home-subtitle { font-size: 14px; font-weight: 700; color: var(--primary-gold); letter-spacing: 1px; margin-bottom: 20px; border-bottom: 3px solid var(--primary-gold); display: inline-block; padding-bottom: 5px;}
+        .home-description { 
+            font-family: 'Merriweather', serif; 
+            font-size: 14px; /* Küçültüldü */
+            line-height: 1.6; 
+            color: var(--text-muted); 
+            margin-bottom: 40px; 
+            text-align: left; 
+            max-width: 700px; 
+            margin-left: auto; margin-right: auto; 
         }
+        .home-description p { margin-bottom: 10px; }
+
+        /* ÇALIŞMA MASASI */
+        .workspace-header { background: var(--card-bg); padding: 0 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; height: 64px; flex-shrink: 0; z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .header-left, .header-center, .header-right { display: flex; align-items: center; gap: 10px; }
-        .project-title-display { font-weight: 700; font-size: 18px; color: var(--text-color); max-width: 250px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
-
-        .workspace-body { flex-grow: 1; display: flex; overflow: hidden; position: relative; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
-        .list-container { 
-            flex-grow: 1; overflow-y: auto; padding: 30px; 
-            display: flex; flex-direction: column; align-items: center;
-            -webkit-overflow-scrolling: touch; 
-        }
         
-        .list-wrapper {
-            width: 100%; max-width: 800px; padding-bottom: 150px;
-            transform-origin: top center; transform: scale(var(--scale-factor)); margin: 0 auto;
+        /* Proje İçi Mod Butonu (Hap Şeklinde, Header Altında) */
+        .workspace-mode-pill {
+            position: absolute; 
+            left: 20px; 
+            top: 80px; /* Header'ın (64px) ve biraz boşluğun altında */
+            z-index: 90;
         }
 
-        /* ZOOM */
-        .zoom-controls {
-            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-            height: 200px; background: white; padding: 15px 10px; border-radius: 50px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+        /* Zoom Kontrolleri (Sol Orta - Küçük ve Şeffaf) */
+        .zoom-controls-left {
+            position: fixed; left: 10px; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 5px;
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 8px 4px; border-radius: 20px;
+            z-index: 90; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            opacity: 0.3; transition: opacity 0.3s;
         }
-        .zoom-slider { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 8px; height: 140px; accent-color: var(--primary-blue); }
+        .zoom-controls-left:hover { opacity: 1; }
+        
+        .zoom-slider-v {
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* Webkit */
+            width: 8px; height: 80px;
+            cursor: pointer;
+        }
 
-        /* KART TASARIMI */
-        .card { 
-            background: var(--card-bg); 
-            border: 1px solid var(--border-color); 
-            border-radius: 12px; 
-            margin-bottom: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: box-shadow 0.2s;
-        }
-        .card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        
-        .card-header { display: flex; align-items: center; padding: 12px 15px; gap: 12px; border-bottom: 1px solid transparent; }
-        
-        .drag-handle { 
-            color: #cbd5e1; cursor: grab; font-size: 20px; display: flex; align-items: center;
-            touch-action: none; 
-            padding: 5px; 
-        }
-        .drag-handle:active { cursor: grabbing; }
-        
-        .item-number-input {
-            width: 32px; height: 32px; text-align: center; border: 1px solid #e2e8f0;
-            background: #f8fafc; border-radius: 8px; font-size: 14px; font-weight: bold; color: var(--primary-blue);
-            outline: none; transition: 0.2s;
-        }
-        .item-number-input:focus { background: white; border-color: var(--primary-blue); }
+        .workspace-body { flex-grow: 1; display: flex; overflow: hidden; position: relative; background-image: radial-gradient(var(--border-color) 1px, transparent 1px); background-size: 20px 20px; }
+        .list-container { flex-grow: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; align-items: center; -webkit-overflow-scrolling: touch; padding-bottom: 100px; }
+        .list-wrapper { width: 100%; max-width: 800px; transform-origin: top center; transform: scale(var(--scale-factor)); margin: 0 auto; }
 
-        .item-title-input {
-            flex-grow: 1; border: none; background: transparent; font-size: 16px; font-weight: 600;
-            color: #334155; outline: none; resize: none; overflow: hidden; min-height: 24px; line-height: 1.5; padding: 4px 0; font-family: 'Inter', sans-serif;
+        /* Proje Başlığı (Liste Üstü - Büyük) */
+        .workspace-project-title {
+            font-size: 32px; font-weight: 800; color: var(--text-color);
+            margin-bottom: 30px; text-align: center; width: 100%; max-width: 800px;
+            border: none; background: transparent; outline: none;
+            font-family: 'Inter', sans-serif; padding: 10px;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.2s;
         }
-        .item-title-input::placeholder { color: #cbd5e1; font-weight: 400; }
-        
-        .card-actions { display: flex; gap: 5px; }
-        .icon-btn { 
-            background: transparent; border: 1px solid transparent; cursor: pointer; 
-            padding: 6px; border-radius: 6px; font-size: 16px; color: #94a3b8; 
-            transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .icon-btn:hover { background: #f1f5f9; color: #333; transform: scale(1.1); }
-        .icon-btn.active { background: #eff6ff; color: var(--primary-blue); border-color: #bfdbfe; }
-        .icon-btn.active-green { background: #ecfdf5; color: var(--success); border-color: #a7f3d0; }
+        .workspace-project-title:focus { border-bottom: 2px solid var(--primary-blue); }
+        .workspace-project-title::placeholder { color: var(--border-color); }
 
-        .content-area { display: none; padding: 15px; border-top: 1px dashed #e2e8f0; animation: slideDown 0.2s ease-out; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        /* KARTLAR */
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: box-shadow 0.2s; }
+        .card-header { display: flex; align-items: center; padding: 12px 15px; gap: 12px; }
+        .drag-handle { color: #cbd5e1; cursor: grab; font-size: 20px; padding: 5px; touch-action: none; }
+        .item-number-input { width: 32px; height: 32px; text-align: center; border: 1px solid var(--border-color); background: var(--input-bg); border-radius: 8px; font-weight: bold; color: var(--primary-blue); outline: none; }
+        .item-title-input { flex-grow: 1; border: none; background: transparent; font-size: 16px; font-weight: 600; color: var(--text-color); resize: none; font-family: 'Inter', sans-serif; outline: none; }
+        
+        .content-area { display: none; padding: 15px; border-top: 1px dashed var(--border-color); position: relative; }
         .content-area.show { display: block; }
         
-        .area-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700; display: block; margin-bottom: 8px; }
+        textarea.smart-input { width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-family: 'Merriweather', serif; line-height: 1.6; resize: vertical; background: var(--input-bg); color: var(--text-color); box-sizing: border-box; outline: none; }
+        textarea.smart-input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(58, 110, 165, 0.1); }
         
-        textarea.smart-input { 
-            width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; 
-            font-family: 'Merriweather', serif; line-height: 1.6; resize: vertical; 
-            box-sizing: border-box; outline: none; font-size: 14px; background: #fcfcfc; color: #334155;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        textarea.smart-input:focus { background: white; border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.1); }
+        .word-count-badge { position: absolute; bottom: 8px; right: 25px; font-size: 11px; color: var(--text-muted); opacity: 0.8; pointer-events: none; background: var(--card-bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border-color); }
 
-        /* BULK AREA */
-        .bulk-area { 
-            display: none; width: 100%; max-width: 800px; margin-bottom: 20px; 
-            background: white; padding: 20px; border: 1px solid var(--border-color); 
-            border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        /* Toplam Kelime Sayacı (Küçültüldü) */
+        .total-word-count {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--primary-blue); color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 90; pointer-events: none;
+            transition: opacity 0.3s;
+            display: flex; align-items: center; gap: 5px;
         }
-        .bulk-area textarea { width: 100%; height: 150px; margin-bottom: 15px; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; font-family: 'Inter', sans-serif; }
 
-        /* MODAL (Genel) */
-        .modal-overlay { 
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 100; 
-            justify-content: center; align-items: center; 
-            animation: fadeIn 0.2s;
-        }
-        .modal-content { 
-            background: #fff; width: 90%; max-width: 500px; border-radius: 16px; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); overflow: hidden; display: flex; flex-direction: column; 
-            max-height: 85vh;
-        }
-        .modal-header { 
-            padding: 20px; background: #f8fafc; border-bottom: 1px solid var(--border-color); 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .modal-header h3 { margin: 0; color: #0f172a; }
-        .modal-body { 
-            padding: 20px; overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-        }
+        /* MODALLAR */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-overlay); backdrop-filter: blur(2px); z-index: 100; justify-content: center; align-items: center; animation: fadeIn 0.2s; }
+        .modal-content { background: var(--card-bg); width: 90%; max-width: 500px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh; border: 1px solid var(--border-color); }
+        .modal-content.large { max-width: 800px; height: 90vh; background: transparent; border: none; box-shadow: none; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); border-radius: 16px 16px 0 0; }
+        .modal-header h3 { margin: 0; color: var(--text-color); }
+        .modal-body { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         
-        /* Liste (Projeler) */
-        .proj-list { list-style: none; padding: 0; margin: 0; }
-        .proj-item {
-            display: flex; justify-content: space-between; align-items: center; padding: 15px;
-            border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px;
-            background: #fff; cursor: pointer; transition: all 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .proj-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background: var(--input-bg); }
         .proj-item:hover { border-color: var(--primary-blue); transform: translateX(5px); }
-        .proj-item-name { font-weight: 600; color: #334155; }
-        .proj-actions button { background: none; border: none; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
-        .proj-actions button:hover { opacity: 1; }
 
-        /* Geniş Modal (Önizleme İçin) */
-        .modal-content.large { 
-            max-width: 800px; /* Genişlik kısıtlaması yok, A4 gibi olacak */
-            width: auto; 
-            height: 90vh;
-            background: transparent; 
-            box-shadow: none;
-        }
-
-        /* Kelime İşlemci Kağıt Görünümü */
         .preview-paper {
-            background: white;
-            width: 21cm; /* A4 Genişliği */
-            min-height: 29.7cm; /* A4 Yüksekliği */
-            padding: 2.54cm; /* Standart kenar boşluğu */
-            margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.15);
-            overflow-y: visible; /* İçerik taşarsa uzasın */
-            font-family: 'Times New Roman', Times, serif; 
-            line-height: 1.6; 
-            color: #000; 
-            font-size: 12pt;
-            outline: none; /* Focus outline'ı kaldır */
-            cursor: text;
+            background: white; color: black;
+            width: 21cm; min-height: 29.7cm; padding: 2.54cm; margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); overflow-y: visible;
+            font-family: 'Times New Roman', Times, serif; line-height: 1.6; font-size: 12pt;
+            outline: none; cursor: text;
         }
-
-        .preview-body { 
-            padding: 20px; flex-grow: 1; overflow-y: auto; 
-            display: flex; justify-content: center; /* Kağıdı ortala */
-            background: rgba(0,0,0,0.5); /* Modal arkası koyu */
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .preview-item { margin-bottom: 20px; }
-        .preview-number { font-weight: bold; margin-right: 5px; }
-
-        /* DETAY GİZLEME CSS */
-        .hide-details h3 { display: none !important; } /* Başlıkları gizle */
-        .hide-details .preview-item { margin-bottom: 15px; } /* Boşlukları ayarla */
         
-        .ghost { opacity: 0.4; background: #cbd5e1; border: 2px dashed #94a3b8; }
-        
+        /* Sadece Metin Modu İçin CSS */
+        .preview-paper.clean-view h3 { display: none; }
+        .preview-paper.clean-view h1 { display: none; } /* Proje başlığını da gizlemek isterseniz */
+
+        .preview-body { padding: 20px; flex-grow: 1; overflow-y: auto; display: flex; justify-content: center; }
+
+        .ad-banner { width: 100%; text-align: center; background: transparent; min-height: 0; overflow: hidden; flex-shrink: 0; padding: 10px 0; }
+        .bulk-area { display: none; width: 100%; max-width: 800px; margin-bottom: 20px; background: var(--card-bg); padding: 20px; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+
         /* Responsive */
         @media (max-width: 600px) {
-            .home-buttons { flex-direction: column; align-items: center; }
-            .big-btn { width: 100%; max-width: 300px; height: 80px; flex-direction: row; }
-            .workspace-header { height: auto; flex-wrap: wrap; padding: 10px; gap: 10px; justify-content: center; }
-            .header-center { order: 3; width: 100%; justify-content: center; border-top: 1px solid #eee; padding-top: 10px; }
+            .top-controls-left, .top-controls-right { top: 10px; }
+            .home-container { padding: 30px 20px; }
+            .home-title { font-size: 32px; }
             .preview-paper { width: 95%; padding: 20px; }
+            .workspace-header { padding: 0 10px; height: auto; flex-wrap: wrap; justify-content: center; gap: 5px; padding-bottom: 10px; }
+            .header-center { order: 3; width: 100%; justify-content: center; border-top: 1px solid var(--border-color); padding-top: 5px; }
+            .workspace-project-title { font-size: 24px; margin-bottom: 20px; }
+            .workspace-mode-pill { top: 90px; } /* Mobilde header uzadığı için */
         }
     </style>
 </head>
 <body>
 
+    <!-- ANASAYFA SOL ÜST KONTROL (MOD) -->
+    <div class="top-controls-left" id="homeModeControl">
+        <div class="control-pill" onclick="toggleDarkMode()">
+            <span data-key="mode_label">Mode:</span> 🌙 / ☀️
+        </div>
+    </div>
+
+    <!-- ANASAYFA SAĞ ÜST KONTROL (DİL) -->
+    <div class="top-controls-right" id="langControl">
+        <div class="control-pill">
+            <span data-key="language_label">Lang:</span>
+            <button class="icon-btn-text" onclick="setLanguage('en')" id="btn-en">🇬🇧</button>
+            <div style="width:1px; height:15px; background:var(--border-color);"></div>
+            <button class="icon-btn-text" onclick="setLanguage('tr')" id="btn-tr">🇹🇷</button>
+        </div>
+    </div>
+
     <!-- ANASAYFA -->
     <div id="view-home" class="view-section active">
-        
-        <!-- DİL DEĞİŞTİRİCİ - SADECE ANASAYFADA GÖRÜNÜR -->
-        <div class="lang-switcher">
-            <span data-key="language_label">Language:</span>
-            <button class="lang-btn" onclick="setLanguage('en')" id="btn-en">🇬🇧</button>
-            <div style="width:1px; height:15px; background:#ddd;"></div>
-            <button class="lang-btn" onclick="setLanguage('tr')" id="btn-tr">🇹🇷</button>
-        </div>
-
         <div class="home-container">
-            <!-- Logo SVG: Kalem ve Çip Tasarımı -->
             <div class="logo-area">
                 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Devre Yolları (Chip Arkaplan) -->
                     <path d="M20 80 L30 80 L35 75" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
                     <path d="M80 80 L70 80 L65 75" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
                     <rect x="35" y="65" width="30" height="25" rx="4" stroke="#cfa15c" stroke-width="2" fill="white"/>
                     <circle cx="42" cy="72" r="2" fill="#cfa15c"/>
                     <circle cx="58" cy="72" r="2" fill="#cfa15c"/>
-                    <circle cx="42" cy="82" r="2" fill="#cfa15c"/>
-                    <circle cx="58" cy="82" r="2" fill="#cfa15c"/>
-                    
-                    <!-- Dolma Kalem (Quill) -->
                     <path d="M70 20 C70 20 50 25 40 45 C35 55 35 65 48 65 C60 65 75 50 80 30 C82 20 70 20 70 20 Z" fill="#3a6ea5" stroke="#2c5282" stroke-width="2"/>
-                    <path d="M48 65 L35 85" stroke="#2c5282" stroke-width="3" stroke-linecap="round"/> <!-- Kalem Ucu Gövdesi -->
-                    <path d="M35 85 L32 92 L38 92 Z" fill="#2c5282"/> <!-- Metal Uç -->
-                    <path d="M40 45 C45 45 65 30 70 20" stroke="white" stroke-width="1.5" stroke-opacity="0.5"/> <!-- Işık Yansıması -->
+                    <path d="M48 65 L35 85" stroke="#2c5282" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M35 85 L32 92 L38 92 Z" fill="#2c5282"/>
+                    <path d="M40 45 C45 45 65 30 70 20" stroke="white" stroke-width="1.5" stroke-opacity="0.5"/>
                 </svg>
             </div>
 
+            <!-- Ana Başlık (Büyütüldü) -->
             <div class="home-title" data-key="app_title">WRITING TOOL</div>
-            <div class="home-subtitle" data-key="app_subtitle">WHAT IS THE WRITING TOOL?</div>
-            
-            <div class="home-description" data-key="app_description">
-                The Writing Tool is a simple instrument for creating outlines for your complex texts and easily organizing this flow. If desired, it is also possible to write the entire text within the "Writing Tool".<br><br>
-                When you enter the flow step by step, all items will be numbered by the system. At this point, you can enter descriptions for items and change their positions as you wish to finalize the fiction of the text. (Items can be moved by dragging with the cursor or by changing the sequence number.) To write the text from within the "Writing Tool", you can add text specific to the item, view your text from the "Preview" section when the entire flow is completed, and then print/export it.
-            </div>
 
+            <!-- Butonlar (Yukarı Taşındı) -->
             <div class="home-buttons">
                 <button class="big-btn btn-projects" onclick="openProjectsModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                    <span data-key="btn_my_projects">MY PROJECTS</span>
+                    <span style="font-size:24px">📂</span> <span data-key="btn_my_projects">MY PROJECTS</span>
                 </button>
                 <button class="big-btn btn-new" onclick="openNewProjectModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    <span data-key="btn_new_project">NEW PROJECT</span>
+                    <span style="font-size:24px">➕</span> <span data-key="btn_new_project">NEW PROJECT</span>
                 </button>
             </div>
 
-            <!-- REKLAM ALANI / AD SPACE - ANASAYFA (HOME) -->
-            <div class="ad-banner">
-                <!-- Reklam kodu -->
-            </div>
+            <!-- Alt Başlık ve Açıklama (Aşağı Taşındı ve Küçültüldü) -->
+            <div class="home-subtitle" data-key="app_subtitle">WHAT IS THE WRITING TOOL?</div>
+            <div class="home-description" data-key="app_description"></div>
 
+            <div class="ad-banner">
+                <!-- AdSense Home -->
+            </div>
         </div>
     </div>
 
@@ -481,49 +336,58 @@
     <div id="view-workspace" class="view-section">
         <div class="workspace-header">
             <div class="header-left">
-                <button class="btn" onclick="goHome()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    <span data-key="nav_home">Home</span>
-                </button>
-                <div class="project-title-display" id="wsProjTitle">Project Name</div>
-                <button class="btn" onclick="saveData(true)" title="Save">💾 <span data-key="nav_save">Save</span></button>
+                <button class="btn" onclick="goHome()">🏠 <span data-key="nav_home">Home</span></button>
+                <button class="btn" onclick="saveData(true)">💾 <span data-key="nav_save">Save</span></button>
+                <button class="btn" onclick="exportProject()">📤 <span data-key="nav_export">Export</span></button>
             </div>
-            <div class="header-center">
+            
+            <div class="header-right">
                 <button class="btn" onclick="toggleAll('desc')">📝 <span data-key="nav_notes">Notes</span></button>
                 <button class="btn" onclick="toggleAll('content')">✍ <span data-key="nav_drafts">Drafts</span></button>
-            </div>
-            <div class="header-right">
-                <button class="btn btn-primary" onclick="toggleBulk()">+ <span data-key="nav_bulk">Bulk Add</span></button>
-                <button class="btn btn-gold" onclick="addItem()">+ <span data-key="nav_single">Add Item</span></button>
-                <button class="btn btn-success" onclick="openPreview()" style="background-color: #10b981;">👁 <span data-key="nav_preview">Preview</span></button>
+                <button class="btn btn-primary" onclick="toggleBulk()">+ <span data-key="nav_bulk">Bulk</span></button>
+                <button class="btn btn-gold" onclick="addItem()">+ <span data-key="nav_single">Add</span></button>
+                <button class="btn btn-success" onclick="openPreview()">👁 <span data-key="nav_preview">Preview</span></button>
             </div>
         </div>
 
         <div class="workspace-body">
+            <!-- Proje İçi Mod Butonu (Hap Şeklinde, Solda Home Altında) -->
+            <div class="workspace-mode-pill control-pill" onclick="toggleDarkMode()">
+                <span data-key="mode_label">Mode:</span> 🌙 / ☀️
+            </div>
+
+            <!-- Sol Orta Zoom Kontrol -->
+            <div class="zoom-controls-left">
+                <div style="font-size:10px; text-align:center;">+</div>
+                <input type="range" min="0.5" max="1.1" step="0.05" value="1" class="zoom-slider-v" oninput="changeZoom(this.value)">
+                <div style="font-size:10px; text-align:center;">-</div>
+            </div>
+
             <div class="list-container">
+                <!-- Proje Başlığı (Maddelerin Üstünde) -->
+                <input type="text" class="workspace-project-title" id="wsProjTitleInput" placeholder="Project Title" oninput="updateProjectTitle(this.value)">
+
                 <div class="bulk-area" id="bulkArea">
-                    <h4 style="margin-top:0; color: var(--primary-blue);" data-key="bulk_title">Bulk Add Items</h4>
-                    <div style="font-size:13px; margin-bottom:10px; color:#64748b;" data-key="bulk_desc">Paste your items line by line. Numbers will be added automatically.</div>
-                    <textarea id="bulkTextInput" placeholder="Introduction&#10;Character Analysis&#10;Development..."></textarea>
-                    <div style="text-align:right; display:flex; justify-content:flex-end; gap:10px;">
+                    <h4 style="margin-top:0;" data-key="bulk_title">Bulk Add Items</h4>
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;" data-key="bulk_desc">Paste items...</div>
+                    <textarea id="bulkTextInput"></textarea>
+                    <div style="text-align:right; margin-top:10px;">
                         <button class="btn" onclick="toggleBulk()" data-key="btn_cancel">Cancel</button>
-                        <button class="btn btn-primary" onclick="processBulk()" data-key="btn_add">Add Items</button>
+                        <button class="btn btn-primary" onclick="processBulk()" data-key="btn_add">Add</button>
                     </div>
                 </div>
 
                 <div class="list-wrapper" id="listWrapper"></div>
             </div>
-
-            <div class="zoom-controls">
-                <div style="font-size:14px; color:#94a3b8; margin:8px 0;">+</div>
-                <input type="range" min="0.5" max="1.1" step="0.05" value="1" class="zoom-slider" oninput="changeZoom(this.value)">
-                <div style="font-size:14px; color:#94a3b8; margin:8px 0;">-</div>
-            </div>
         </div>
 
-        <!-- REKLAM ALANI / AD SPACE - ÇALIŞMA MASASI (WORKSPACE BOTTOM) -->
+        <!-- Toplam Kelime Sayacı (Küçültüldü) -->
+        <div class="total-word-count" id="totalWordCount">
+            <span>📝</span> 0 Words
+        </div>
+
         <div class="ad-banner">
-            <!-- Alt şerit reklam kodunuzu buraya yapıştırın. -->
+            <!-- AdSense Workspace Bottom -->
         </div>
     </div>
 
@@ -536,32 +400,33 @@
             </div>
             <div class="modal-body">
                 <ul class="proj-list" id="projectsListEl"></ul>
-                <div id="noProjectsMsg" style="text-align:center; color:#94a3b8; padding:20px; display:none;" data-key="msg_no_projects">
-                    You don't have any projects yet.
-                </div>
+                <div id="noProjectsMsg" style="text-align:center; padding:20px; color:var(--text-muted);" data-key="msg_no_projects">...</div>
             </div>
-            <div style="padding:15px; background:#f8fafc; text-align:right;">
-                <button class="btn btn-gold" onclick="closeModal('projectsModal'); openNewProjectModal()">+ <span data-key="btn_create_new">Create New Project</span></button>
+            <div style="padding:15px; text-align:right;">
+                <button class="btn btn-gold" onclick="closeModal('projectsModal'); openNewProjectModal()">+ <span data-key="btn_create_new">New</span></button>
             </div>
         </div>
     </div>
 
-    <!-- YENİ PROJE MODALI -->
+    <!-- YENİ PROJE / YÜKLEME MODALI -->
     <div class="modal-overlay" id="newProjectModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 data-key="modal_new_project">Create New Project</h3>
+                <h3 data-key="modal_new_project">New Project</h3>
                 <button class="btn" onclick="closeModal('newProjectModal')">✕</button>
             </div>
             <div class="modal-body">
-                <label style="display:block; margin-bottom:8px; font-weight:600; color:#475569;" data-key="label_proj_name">Project Name</label>
-                <input type="text" id="newProjNameInput" placeholder="Ex: New Novel Draft" 
-                       style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:16px; outline:none; box-sizing:border-box;"
-                       onkeypress="handleEnterProject(event)">
-            </div>
-            <div style="padding:20px; text-align:right; display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn" onclick="closeModal('newProjectModal')" data-key="btn_cancel">Cancel</button>
-                <button class="btn btn-primary" onclick="createProjectAction()" data-key="btn_create_start">Create & Start</button>
+                <p style="font-size:14px; color:var(--text-muted); margin-bottom:5px;">Create a blank project:</p>
+                <input type="text" id="newProjNameInput" style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:8px; background:var(--input-bg); color:var(--text-color); box-sizing:border-box;" placeholder="Name..." onkeypress="handleEnterProject(event)">
+                <div style="text-align:right; margin-top:10px;">
+                     <button class="btn btn-primary" onclick="createProjectAction()" data-key="btn_create_start">Create</button>
+                </div>
+
+                <div style="margin-top:30px; border-top:1px solid var(--border-color); padding-top:20px; text-align:center;">
+                    <div style="font-size:14px; color:var(--text-muted); margin-bottom:15px;" data-key="lbl_or_import">Or restore a project from backup:</div>
+                    <button class="btn btn-gold" onclick="document.getElementById('importProjFile').click()">📂 <span data-key="btn_import_proj">Load Backup (.json)</span></button>
+                    <input type="file" id="importProjFile" style="display:none" onchange="importProject(this)">
+                </div>
             </div>
         </div>
     </div>
@@ -569,408 +434,406 @@
     <!-- ÖNİZLEME MODALI -->
     <div class="modal-overlay" id="previewModal">
         <div class="modal-content large">
-            <div class="modal-header" style="background: #fff; border-radius: 8px 8px 0 0; padding: 15px 25px;">
-                <div style="display:flex; flex-direction:column;">
-                    <h3 style="margin:0" data-key="preview_title">Free Edit & Preview</h3>
-                    <span style="font-size:12px; color:#ef4444;" data-key="preview_warning">Note: Changes here are free-form and will not reflect back to the cards. For export only.</span>
-                </div>
+            <div class="modal-header" style="background:white; border-bottom:1px solid #eee;">
+                <h3 data-key="preview_title" style="color:#333;">Preview</h3>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn" onclick="exportWord()">📄 <span data-key="btn_word">Download Word</span></button>
-                    <button class="btn" id="toggleDetailsBtn" onclick="togglePreviewDetails()" data-key="btn_show_text_only">Show Text Only</button>
-                    <button class="btn btn-primary" onclick="closeModal('previewModal');" data-key="btn_close">Close</button>
+                    <!-- SADECE METİN GÖRÜNTÜLEME BUTONU -->
+                    <button class="btn" onclick="toggleCleanView()" id="btnCleanView">📜 <span data-key="btn_text_only">Text Only</span></button>
+                    <button class="btn" onclick="exportWord()">📄 <span data-key="btn_word">Word</span></button>
+                    <button class="btn btn-primary" onclick="closeModal('previewModal')">✕</button>
                 </div>
             </div>
-            <div class="preview-body" id="previewBodyContainer">
-                <!-- A4 Kağıdı -->
+            <div class="preview-body" style="background:rgba(0,0,0,0.5);">
                 <div id="previewPaper" class="preview-paper" contenteditable="true"></div>
             </div>
         </div>
     </div>
 
 <script>
-    // --- ÇEVİRİ SÖZLÜĞÜ ---
     const translations = {
         en: {
-            language_label: "Language:",
-            app_title: "WRITING TOOL",
-            app_subtitle: "WHAT IS THE WRITING TOOL?",
-            app_description: `The Writing Tool is a simple instrument for creating outlines for your complex texts and easily organizing this flow. If desired, it is also possible to write the entire text within the "Writing Tool".<br><br>When you enter the flow step by step, all items will be numbered by the system. At this point, you can enter descriptions for items and change their positions as you wish to finalize the fiction of the text. (Items can be moved by dragging with the cursor or by changing the sequence number.) To write the text from within the "Writing Tool", you can add text specific to the item, view your text from the "Preview" section when the entire flow is completed, and then print/export it.`,
-            btn_my_projects: "MY PROJECTS",
-            btn_new_project: "NEW PROJECT",
-            nav_home: "Home",
-            nav_save: "Save",
-            nav_notes: "Notes",
-            nav_drafts: "Drafts",
-            nav_bulk: "Bulk Add",
-            nav_single: "Add Item",
-            nav_preview: "Preview",
-            bulk_title: "Bulk Add Items",
-            bulk_desc: "Paste your items line by line. Numbers will be added automatically.",
-            bulk_ph: "Introduction\nCharacter Analysis\nDevelopment...",
-            btn_cancel: "Cancel",
-            btn_add: "Add Items",
-            modal_saved_projects: "Saved Projects",
-            msg_no_projects: "You don't have any projects yet.",
-            btn_create_new: "Create New Project",
-            modal_new_project: "Create New Project",
-            label_proj_name: "Project Name",
-            ph_proj_name: "Ex: New Novel Draft",
-            btn_create_start: "Create & Start",
-            preview_title: "Free Edit & Preview",
-            preview_warning: "Note: Changes here are free-form and will not reflect back to the cards. For export only.",
-            btn_word: "Download Word",
-            btn_show_text_only: "Show Text Only",
-            btn_show_all: "Show All Details",
-            btn_close: "Close",
-            ph_item_title: "Item Title...",
-            label_desc: "📌 Section Description / Notes",
-            ph_desc: "What will happen in this section?",
-            label_text: "📄 Draft Text",
-            ph_text: "Write your text here...",
-            msg_list_empty: "Your list is empty.<br>Start by adding 'Add Item' or 'Bulk Add' above.",
-            msg_no_content: "No content yet.",
-            alert_proj_name: "Please enter a project name.",
-            alert_delete_proj: "Are you sure you want to delete the project and all its content?",
-            prompt_rename: "New project name:",
-            alert_delete_item: "Do you want to delete this item?",
-            alert_save_success: "Project saved successfully!"
+            language_label: "Lang:", mode_label: "Mode:",
+            app_title: "WRITING TOOL", app_subtitle: "WHAT IS THE WRITING TOOL?",
+            app_description: `
+                <p>The Writing Tool is a simple instrument for creating outlines for your complex texts and easily organizing this flow. For those who wish, it is also possible to write the entire text within the "Writing Tool"!</p>
+                <p>When you enter your text flow into the system in bulk or step by step, all items of the flow will be numbered by the system. At this point, you can enter descriptions for the items and change their places as you wish to finalize the fiction of the text.</p>
+                <p>To write the text from within the "Writing Tool", you can add text specific to the item, view your text from the "Preview" section when the entire flow is completed, and get a printout.</p>
+                <p>To continue your work on another device, you can use the export feature within your project, and restore it on the new device.</p>
+                <p>We wish you success in your studies.</p>
+            `,
+            btn_my_projects: "MY PROJECTS", btn_new_project: "NEW PROJECT",
+            nav_home: "Home", nav_save: "Save", nav_export: "Export", nav_notes: "Notes", nav_drafts: "Drafts", nav_bulk: "Bulk", nav_single: "Add", nav_preview: "Preview",
+            bulk_title: "Bulk Add Items", bulk_desc: "Paste your items line by line.", btn_add: "Add Items", btn_cancel: "Cancel",
+            modal_saved_projects: "Saved Projects", msg_no_projects: "You don't have any projects yet.", btn_create_new: "New Project",
+            modal_new_project: "Create New Project", btn_create_start: "Create & Start",
+            lbl_or_import: "Or restore a project from backup:", btn_import_proj: "Load Backup (.json)",
+            preview_title: "Free Edit & Preview", btn_word: "Download Word", btn_text_only: "Text Only",
+            ph_item_title: "Item Title...", ph_desc: "Section notes...", ph_text: "Write your text here...",
+            alert_save: "Project saved successfully!", alert_import: "Project restored successfully!", word_label: "Words"
         },
         tr: {
-            language_label: "Dil:",
-            app_title: "YAZARLIK APARATI",
-            app_subtitle: "YAZARLIK APARATI NEDİR?",
-            app_description: `Yazarlık Aparatı, karmaşık metinleriniz için akış (outline) çıkarmaya ve bu akışı kolayca düzenlemenize yarayan basit bir araçtır. Arzu edersenler için metnin tamamını “Yazarlık Aparatı" içinde yazmak da mümkündür.<br><br>Akışı sisteme adım adım girdiğinizde tüm maddeler sistem tarafından numaralandırılacaktır. Bu noktada maddelere açıklamalar girebilir ve onların yerlerini istediğiniz gibi değiştirerek metnin kurgusuna son halini verebilirsiniz. (Maddelerin yeri imleçle sürüklenerek ya da sıra numarasına müdahale edilerek değiştirilebilir.) Metni “Yazarlık Aparatı” içinden yazmak için ise madde özelinde metin ekleyebilir, tüm akış tamamladığında “Önizle" kısmından metninizi görüntüleyebilir ve daha sonrasında çıktı alabilirsiniz.`,
-            btn_my_projects: "PROJELERİM",
-            btn_new_project: "YENİ PROJE",
-            nav_home: "Anasayfa",
-            nav_save: "Kaydet",
-            nav_notes: "Açıklamalar",
-            nav_drafts: "Metinler",
-            nav_bulk: "Toplu Ekle",
-            nav_single: "Tek Madde",
-            nav_preview: "Önizle",
-            bulk_title: "Toplu Madde Ekle",
-            bulk_desc: "Maddelerinizi alt alta yapıştırın. Numaralar otomatik eklenecektir.",
-            bulk_ph: "Giriş Bölümü\nKarakter Tanıtımı\nGelişme...",
-            btn_cancel: "İptal",
-            btn_add: "Ekle",
-            modal_saved_projects: "Kayıtlı Projelerim",
-            msg_no_projects: "Henüz hiç projen yok.",
-            btn_create_new: "Yeni Proje Oluştur",
-            modal_new_project: "Yeni Proje Oluştur",
-            label_proj_name: "Proje İsmi",
-            ph_proj_name: "Örn: Yeni Roman Taslağı",
-            btn_create_start: "Oluştur ve Başla",
-            preview_title: "Serbest Düzenleme & Önizleme",
-            preview_warning: "Dikkat: Buradaki değişiklikler serbest formattır ve kartlara geri yansımaz. Sadece çıktı içindir.",
-            btn_word: "Word İndir",
-            btn_show_text_only: "Sadece Metni Göster",
-            btn_show_all: "Tüm Detayları Göster",
-            btn_close: "Kapat",
-            ph_item_title: "Madde Başlığı...",
-            label_desc: "📌 Bölüm Açıklaması / Notlar",
-            ph_desc: "Bu bölümde neler olacak?",
-            label_text: "📄 Taslak Metin",
-            ph_text: "Metninizi buraya yazın...",
-            msg_list_empty: "Listeniz boş.<br>Yukarıdan 'Tek Madde' veya 'Toplu Madde' ekleyerek başlayın.",
-            msg_no_content: "Henüz içerik yok.",
-            alert_proj_name: "Lütfen proje ismi giriniz.",
-            alert_delete_proj: "Projeyi ve tüm içeriğini silmek istediğinize emin misiniz?",
-            prompt_rename: "Yeni proje adı:",
-            alert_delete_item: "Maddeyi silmek istiyor musun?",
-            alert_save_success: "Proje başarıyla kaydedildi!"
+            language_label: "Dil:", mode_label: "Mod:",
+            app_title: "YAZARLIK APARATI", app_subtitle: "YAZARLIK APARATI NEDİR?",
+            app_description: `
+                <p>Yazarlık Aparatı, karmaşık metinleriniz için akış (outline) çıkarmaya ve bu akışı kolayca düzenlemenize yarayan basit bir araçtır. Arzu edenler için metnin tamamını “Yazarlık Aparatı" içinde yazmak da mümkün!</p>
+                <p>Metninizin akışını sisteme toplu olarak ya da adım adım girdiğinizde akışın tüm maddeleri sistem tarafından numaralandırılacaktır. Bu noktada maddelere açıklamalar girebilir ve onların yerlerini istediğiniz gibi değiştirerek metnin kurgusuna son halini verebilirsiniz.</p>
+                <p>Metni “Yazarlık Aparatı” içinden yazmak için ise madde özelinde metin ekleyebilir, tüm akış tamamladığında “Önizle" kısmından metninizi görüntüleyebilir ve çıktı alabilirsiniz.</p>
+                <p>Çalışmanıza bir başka cihazda devam etmek için projenizin içinden dışa aktarım (export) yapabilir, yeni cihazda bu dosyayı yükleyerek çalışmanıza devam edebilirsiniz.</p>
+                <p>Çalışmalarınızda başarılar dileriz.</p>
+            `,
+            btn_my_projects: "PROJELERİM", btn_new_project: "YENİ PROJE",
+            nav_home: "Anasayfa", nav_save: "Kaydet", nav_export: "Dışa Aktar", nav_notes: "Notlar", nav_drafts: "Metin", nav_bulk: "Toplu", nav_single: "Ekle", nav_preview: "Önizle",
+            bulk_title: "Toplu Madde Ekle", bulk_desc: "Maddelerinizi alt alta yapıştırın.", btn_add: "Ekle", btn_cancel: "İptal",
+            modal_saved_projects: "Kayıtlı Projelerim", msg_no_projects: "Henüz hiç projen yok.", btn_create_new: "Yeni Proje",
+            modal_new_project: "Yeni Proje Oluştur", btn_create_start: "Oluştur ve Başla",
+            lbl_or_import: "Veya yedekten proje yükle:", btn_import_proj: "Yedek Yükle (.json)",
+            preview_title: "Serbest Düzenleme & Önizleme", btn_word: "Word İndir", btn_text_only: "Sadece Metin",
+            ph_item_title: "Madde Başlığı...", ph_desc: "Bölüm notları...", ph_text: "Metninizi buraya yazın...",
+            alert_save: "Proje başarıyla kaydedildi!", alert_import: "Proje başarıyla yüklendi!", word_label: "Kelime"
         }
     };
 
-    let currentLang = localStorage.getItem('yazarAparatLang') || 'en'; // Varsayılan İngilizce
-
-    function setLanguage(lang) {
-        currentLang = lang;
-        localStorage.setItem('yazarAparatLang', lang);
-        
-        // Buton stillerini güncelle
-        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`btn-${lang}`).classList.add('active');
-
-        updateTexts();
-    }
-
-    // Yardımcı çeviri fonksiyonu
-    function t(key) {
-        return translations[currentLang][key] || key;
-    }
-
-    function updateTexts() {
-        // data-key olan elementleri güncelle
-        document.querySelectorAll('[data-key]').forEach(el => {
-            const key = el.getAttribute('data-key');
-            if(translations[currentLang][key]) {
-                // Eğer input/textarea ise placeholder'ı güncelle
-                if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    // Placeholder güncelleme mantığı özel alanlar için manuel yapılabilir
-                } else {
-                    el.innerHTML = translations[currentLang][key];
-                }
-            }
-        });
-
-        // Placeholderları güncelle
-        const bulkInput = document.getElementById('bulkTextInput');
-        if(bulkInput) bulkInput.placeholder = t('bulk_ph');
-        
-        const projInput = document.getElementById('newProjNameInput');
-        if(projInput) projInput.placeholder = t('ph_proj_name');
-
-        // Eğer liste açıksa listeyi yeniden render et (placeholderlar değişsin diye)
-        if(document.getElementById('view-workspace').classList.contains('active')) {
-            renderList();
-        }
-        
-        // Detay butonu metnini güncelle
-        updateDetailsButton();
-        
-        // Başlık güncelleme
-        document.title = t('app_title');
-    }
-
     let appData = { projects: [] };
     let activeProjectId = null;
-    let isDetailsHidden = false;
+    let currentLang = localStorage.getItem('yazarAparatLang') || 'en';
+    let isDarkMode = localStorage.getItem('yazarAparatDark') === 'true';
 
     document.addEventListener('DOMContentLoaded', () => {
-        loadData();
-        setLanguage(currentLang); // Dili yükle
-        
-        new Sortable(document.getElementById('listWrapper'), {
-            handle: '.drag-handle',
-            animation: 150,
-            ghostClass: 'ghost',
-            onEnd: function (evt) {
-                const project = getActiveProject();
-                const item = project.items.splice(evt.oldIndex, 1)[0];
-                project.items.splice(evt.newIndex, 0, item);
-                saveData();
-                renderList();
+        try {
+            loadData();
+            setLanguage(currentLang);
+            applyDarkMode();
+            
+            const listWrapper = document.getElementById('listWrapper');
+            if(listWrapper) {
+                new Sortable(listWrapper, {
+                    handle: '.drag-handle', animation: 150, onEnd: (evt) => {
+                        const project = getActiveProject();
+                        if(project) {
+                            const item = project.items.splice(evt.oldIndex, 1)[0];
+                            project.items.splice(evt.newIndex, 0, item);
+                            saveData(); renderList();
+                        }
+                    }
+                });
             }
-        });
+        } catch (e) {
+            console.error("Initialization error:", e);
+        }
     });
 
-    // --- NAVIGATION & MODALS ---
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        localStorage.setItem('yazarAparatDark', isDarkMode);
+        applyDarkMode();
+    }
+    function applyDarkMode() {
+        if(isDarkMode) document.body.classList.add('dark-mode');
+        else document.body.classList.remove('dark-mode');
+    }
+
+    function countWords(str) {
+        if (!str) return 0;
+        const matches = str.trim().match(/\S+/g);
+        return matches ? matches.length : 0;
+    }
+    
+    function calculateTotalWords() {
+        const project = getActiveProject();
+        if(!project) {
+            document.getElementById('totalWordCount').innerHTML = `<span>📝</span> 0 ${t('word_label')}`;
+            return;
+        }
+        let total = 0;
+        project.items.forEach(item => {
+            total += countWords(item.content || "");
+        });
+        document.getElementById('totalWordCount').innerHTML = `<span>📝</span> ${total} ${t('word_label')}`;
+    }
+
+    function updateItemCount(index, val) {
+        const count = countWords(val);
+        const badge = document.getElementById(`word-badge-${index}`);
+        if(badge) badge.textContent = `${count} ${t('word_label')}`;
+        calculateTotalWords();
+    }
+
+    function exportProject() {
+        const project = getActiveProject();
+        if(!project) return;
+        
+        const dataStr = JSON.stringify(project);
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const safeName = project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        a.download = `${safeName}_backup_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function importProject(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedProj = JSON.parse(e.target.result);
+                if(importedProj && importedProj.items) {
+                    importedProj.id = Date.now();
+                    appData.projects.push(importedProj);
+                    saveData();
+                    alert(t('alert_import'));
+                    closeModal('newProjectModal');
+                    closeModal('projectsModal');
+                    openProject(importedProj.id);
+                } else {
+                    alert("Invalid project file format.");
+                }
+            } catch(err) { 
+                console.error(err);
+                alert("Error reading file."); 
+            }
+        };
+        reader.readAsText(file);
+        input.value = ''; 
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang; localStorage.setItem('yazarAparatLang', lang);
+        document.getElementById('btn-en').classList.toggle('active', lang==='en');
+        document.getElementById('btn-tr').classList.toggle('active', lang==='tr');
+        updateTexts();
+    }
+    function t(key) { return translations[currentLang][key] || key; }
+    
+    function updateTexts() {
+        document.querySelectorAll('[data-key]').forEach(el => { el.innerHTML = t(el.getAttribute('data-key')); });
+        const bulkInput = document.getElementById('bulkTextInput');
+        if(bulkInput) bulkInput.placeholder = t('bulk_desc');
+        if(activeProjectId) {
+            renderList(); 
+        }
+    }
+
     function goHome() {
         document.getElementById('view-workspace').classList.remove('active');
         document.getElementById('view-home').classList.add('active');
+        document.getElementById('langControl').style.display = 'flex';
+        document.getElementById('homeModeControl').style.display = 'flex';
         activeProjectId = null;
     }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function openProjectsModal() { renderProjectsList(); document.getElementById('projectsModal').style.display = 'flex'; }
-    function openNewProjectModal() {
-        document.getElementById('newProjNameInput').value = '';
-        document.getElementById('newProjectModal').style.display = 'flex';
-        setTimeout(() => document.getElementById('newProjNameInput').focus(), 100);
-    }
-    function handleEnterProject(e) { if(e.key === 'Enter') createProjectAction(); }
-
-    function renderProjectsList() {
-        const list = document.getElementById('projectsListEl');
-        list.innerHTML = '';
-        if(appData.projects.length === 0) { document.getElementById('noProjectsMsg').style.display = 'block'; return; }
-        document.getElementById('noProjectsMsg').style.display = 'none';
-        
-        appData.projects.forEach(p => {
-            const li = document.createElement('li');
-            li.className = 'proj-item';
-            li.innerHTML = `
-                <div class="proj-item-name" onclick="openProjectAndCloseModal(${p.id})">${p.name} <span style="font-weight:400; font-size:12px; color:#94a3b8;">(${p.items.length})</span></div>
-                <div class="proj-actions">
-                    <button onclick="renameProject(${p.id})" title="Rename">✏️</button>
-                    <button onclick="deleteProject(${p.id})" title="Delete" style="color:#ef4444;">🗑️</button>
-                </div>`;
-            list.appendChild(li);
-        });
-    }
-
-    function createProjectAction() {
-        const name = document.getElementById('newProjNameInput').value.trim();
-        if(!name) return alert(t('alert_proj_name'));
-        const newProj = { id: Date.now(), name: name, items: [] };
-        appData.projects.push(newProj);
-        saveData();
-        closeModal('newProjectModal');
-        closeModal('projectsModal'); 
-        openProject(newProj.id);
-    }
-
-    function openProjectAndCloseModal(id) { closeModal('projectsModal'); openProject(id); }
+    
     function openProject(id) {
         activeProjectId = id;
         document.getElementById('view-home').classList.remove('active');
         document.getElementById('view-workspace').classList.add('active');
+        document.getElementById('langControl').style.display = 'none'; 
+        document.getElementById('homeModeControl').style.display = 'none';
         renderList();
     }
-    function deleteProject(id) {
-        if(confirm(t('alert_delete_proj'))) {
-            appData.projects = appData.projects.filter(p => p.id !== id);
-            saveData();
-            renderProjectsList(); 
-        }
+    
+    function getActiveProject() { 
+        if(!activeProjectId) return null;
+        return appData.projects.find(p => p.id === activeProjectId); 
     }
-    function renameProject(id) {
-        const p = appData.projects.find(x => x.id === id);
-        const newName = prompt(t('prompt_rename'), p.name);
-        if(newName && newName.trim()) { p.name = newName.trim(); saveData(); renderProjectsList(); }
+    
+    function updateProjectTitle(newTitle) {
+        const p = getActiveProject();
+        if(p) { p.name = newTitle; saveData(); }
     }
-    function getActiveProject() { return appData.projects.find(p => p.id === activeProjectId); }
 
-    // --- WORKSPACE LOGIC ---
     function renderList() {
         const project = getActiveProject();
         if(!project) return;
-        document.getElementById('wsProjTitle').textContent = project.name;
+        
+        document.getElementById('wsProjTitleInput').value = project.name || '';
+        
         const wrapper = document.getElementById('listWrapper');
         wrapper.innerHTML = '';
-        if(project.items.length === 0) {
-            wrapper.innerHTML = `<div style="text-align:center; color:#94a3b8; margin-top:50px; font-style:italic;">${t('msg_list_empty')}</div>`;
-            return;
-        }
+        
         project.items.forEach((item, index) => {
+            const wCount = countWords(item.content || "");
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
                 <div class="card-header">
-                    <div class="drag-handle" title="Drag">☰</div>
-                    <input type="number" class="item-number-input" value="${index + 1}" onchange="reorderItem(${index}, this.value)" onkeypress="handleOrderEnter(event, ${index}, this.value)">
+                    <div class="drag-handle">☰</div>
+                    <input type="number" class="item-number-input" value="${index + 1}" onchange="reorderItem(${index}, this.value)">
                     <textarea class="item-title-input" rows="1" placeholder="${t('ph_item_title')}" oninput="autoResize(this); updateItem(${index}, 'text', this.value)">${item.text}</textarea>
                     <div class="card-actions">
-                        <button class="icon-btn ${item.showDesc ? 'active' : ''}" onclick="toggleItemField(${index}, 'showDesc')" title="Notes">📝</button>
-                        <button class="icon-btn ${item.showContent ? 'active-green' : ''}" onclick="toggleItemField(${index}, 'showContent')" title="Draft">✍️</button>
-                        <button class="icon-btn" style="color:var(--danger)" onclick="deleteItem(${index})" title="Delete">🗑️</button>
+                        <button class="icon-btn-text" onclick="toggleItemField(${index}, 'showDesc')">📝</button>
+                        <button class="icon-btn-text" onclick="toggleItemField(${index}, 'showContent')">✍</button>
+                        <button class="icon-btn-text" style="color:var(--danger)" onclick="deleteItem(${index})">🗑️</button>
                     </div>
                 </div>
                 <div class="content-area ${item.showDesc ? 'show' : ''}">
-                    <span class="area-label">${t('label_desc')}</span>
                     <textarea class="smart-input" placeholder="${t('ph_desc')}" oninput="updateItem(${index}, 'desc', this.value)">${item.desc || ''}</textarea>
                 </div>
-                <div class="content-area ${item.showContent ? 'show' : ''}" style="background:#f0fdf4;">
-                    <span class="area-label" style="color:#15803d">${t('label_text')}</span>
-                    <textarea class="smart-input" style="min-height:100px; border-color:#86efac;" placeholder="${t('ph_text')}" oninput="updateItem(${index}, 'content', this.value)">${item.content || ''}</textarea>
+                <div class="content-area ${item.showContent ? 'show' : ''}" style="background:rgba(58, 110, 165, 0.05);">
+                    <textarea class="smart-input" style="min-height:100px;" placeholder="${t('ph_text')}" oninput="updateItem(${index}, 'content', this.value); updateItemCount(${index}, this.value)">${item.content || ''}</textarea>
+                    <div class="word-count-badge" id="word-badge-${index}">${wCount} ${t('word_label')}</div>
                 </div>`;
             wrapper.appendChild(card);
         });
-        setTimeout(() => { document.querySelectorAll('.item-title-input').forEach(el => autoResize(el)); }, 0);
+        calculateTotalWords();
+        setTimeout(() => document.querySelectorAll('.item-title-input').forEach(el => autoResize(el)), 0);
     }
 
-    function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
-    function addItem() { getActiveProject().items.push({ text: '', desc: '', content: '', showDesc: false, showContent: true }); saveData(); renderList(); setTimeout(() => { document.querySelector('.list-container').scrollTop = 99999; }, 100); }
-    function deleteItem(index) { if(confirm(t('alert_delete_item'))) { getActiveProject().items.splice(index, 1); saveData(); renderList(); } }
-    function updateItem(index, key, value) { getActiveProject().items[index][key] = value; saveData(); }
-    function toggleItemField(index, key) { const item = getActiveProject().items[index]; item[key] = !item[key]; saveData(); renderList(); }
-
-    function handleOrderEnter(e, oldIndex, newVal) { if(e.key === 'Enter') { reorderItem(oldIndex, newVal); e.target.blur(); } }
-    function reorderItem(oldIndex, newValStr) {
-        const project = getActiveProject();
-        let newIndex = parseInt(newValStr) - 1;
-        if (isNaN(newIndex)) return renderList();
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex >= project.items.length) newIndex = project.items.length - 1;
-        if (newIndex === oldIndex) return;
-        const item = project.items.splice(oldIndex, 1)[0];
-        project.items.splice(newIndex, 0, item);
-        saveData(); renderList();
+    function addItem() { 
+        const proj = getActiveProject();
+        if(proj) {
+            proj.items.push({ text: '', desc: '', content: '', showDesc: false, showContent: true }); 
+            saveData(); 
+            renderList(); 
+        }
     }
-
-    function toggleBulk() { const area = document.getElementById('bulkArea'); area.style.display = (area.style.display === 'block') ? 'none' : 'block'; }
-    function processBulk() {
-        const txt = document.getElementById('bulkTextInput').value;
-        if(!txt.trim()) return;
-        txt.split('\n').forEach(line => {
-            if(line.trim()) {
-                let clean = line.trim().replace(/^\d+[\.\-\)]\s*/, '');
-                getActiveProject().items.push({ text: clean, desc: '', content: '', showDesc: false, showContent: false });
+    
+    function deleteItem(idx) { 
+        if(confirm('Delete?')) { 
+            const proj = getActiveProject();
+            if(proj) {
+                proj.items.splice(idx, 1); 
+                saveData(); 
+                renderList(); 
             }
-        });
-        document.getElementById('bulkTextInput').value = '';
-        toggleBulk(); saveData(); renderList();
+        } 
     }
-    function toggleAll(type) {
-        const project = getActiveProject();
-        const key = (type === 'desc') ? 'showDesc' : 'showContent';
-        const allOpen = project.items.every(item => item[key]);
-        project.items.forEach(item => item[key] = !allOpen);
+    
+    function updateItem(idx, key, val) { 
+        const proj = getActiveProject();
+        if(proj && proj.items[idx]) {
+            proj.items[idx][key] = val; 
+            saveData(); 
+        }
+    }
+    
+    function toggleItemField(idx, key) { 
+        const proj = getActiveProject();
+        if(proj && proj.items[idx]) {
+            proj.items[idx][key] = !proj.items[idx][key]; 
+            saveData(); 
+            renderList(); 
+        }
+    }
+    
+    function reorderItem(oldIdx, newSeq) {
+        const proj = getActiveProject();
+        if(!proj) return;
+        let newIdx = parseInt(newSeq) - 1;
+        if(isNaN(newIdx) || newIdx < 0) newIdx = 0;
+        if(newIdx >= proj.items.length) newIdx = proj.items.length - 1;
+        const item = proj.items.splice(oldIdx, 1)[0];
+        proj.items.splice(newIdx, 0, item);
         saveData(); renderList();
     }
+    
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openProjectsModal() { renderProjectsList(); document.getElementById('projectsModal').style.display = 'flex'; }
+    function openNewProjectModal() { document.getElementById('newProjectModal').style.display = 'flex'; document.getElementById('newProjNameInput').value=''; }
+    
+    function renderProjectsList() {
+        const list = document.getElementById('projectsListEl'); list.innerHTML = '';
+        if(!appData.projects || appData.projects.length === 0) {
+            document.getElementById('noProjectsMsg').style.display = 'block';
+        } else {
+            document.getElementById('noProjectsMsg').style.display = 'none';
+            appData.projects.forEach(p => {
+                const li = document.createElement('li'); li.className = 'proj-item';
+                li.innerHTML = `<span onclick="closeModal('projectsModal'); openProject(${p.id})">${p.name}</span> <button style="color:var(--danger); background:none; border:none;" onclick="deleteProject(${p.id})">🗑️</button>`;
+                list.appendChild(li);
+            });
+        }
+    }
+    
+    function createProjectAction() {
+        const name = document.getElementById('newProjNameInput').value.trim();
+        if(name) {
+            const newP = { id: Date.now(), name: name, items: [] };
+            appData.projects.push(newP); saveData();
+            closeModal('newProjectModal'); closeModal('projectsModal');
+            openProject(newP.id);
+        } else { alert("Please enter a name."); }
+    }
+    
+    function handleEnterProject(e) { if(e.key === 'Enter') createProjectAction(); }
+    
+    function deleteProject(id) { 
+        if(confirm('Delete project?')) { 
+            appData.projects = appData.projects.filter(p => p.id !== id); 
+            saveData(); 
+            renderProjectsList(); 
+        } 
+    }
+    
+    function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+    function saveData(alertUser) { localStorage.setItem('yazarAparatV5', JSON.stringify(appData)); if(alertUser) alert(t('alert_save')); }
+    
+    function loadData() { 
+        const d = localStorage.getItem('yazarAparatV5'); 
+        if(d) {
+            appData = JSON.parse(d); 
+        } else { 
+            const old = localStorage.getItem('yazarAparatV4'); 
+            if(old) appData = JSON.parse(old); 
+        }
+        if(!appData.projects) appData.projects = [];
+    }
+    
     function changeZoom(val) { document.documentElement.style.setProperty('--scale-factor', val); }
 
-    // --- PREVIEW & EXPORT & FREE EDIT ---
     function openPreview() {
-        const project = getActiveProject();
+        const proj = getActiveProject();
+        if(!proj) return;
         const paper = document.getElementById('previewPaper');
-        let html = `<h1 style="text-align:center; margin-bottom:30px;">${project.name}</h1>`;
+        // Reset clean view class when opening
+        paper.classList.remove('clean-view');
         
-        project.items.forEach((item, index) => {
+        let html = `<h1 style="text-align:center">${proj.name}</h1>`;
+        proj.items.forEach((item, i) => {
             if(item.text || (item.content && item.content.trim())) {
-                html += `<div class="preview-item">
-                    ${item.text ? `<h3 style="margin-bottom:10px;"><span class="preview-number">${index+1}.</span> ${item.text}</h3>` : ''}
-                    ${item.content ? `<div style="text-align:justify; white-space: pre-wrap;">${item.content}</div>` : ''}
-                    ${(!item.text && !item.content) ? '' : '<br>'}
-                </div>`;
+                html += `<div style="margin-bottom:20px"><h3>${i+1}. ${item.text}</h3><div style="text-align:justify; white-space:pre-wrap;">${item.content || ''}</div></div>`;
             }
         });
-        if(project.items.length === 0) html = `<p style="text-align:center; color:#999;">${t('msg_no_content')}</p>`;
-        
         paper.innerHTML = html;
-        
-        isDetailsHidden = false; // Reset
-        updateDetailsButton();
         document.getElementById('previewModal').style.display = 'flex';
     }
 
-    function togglePreviewDetails() {
+    function toggleCleanView() {
         const paper = document.getElementById('previewPaper');
-        isDetailsHidden = !isDetailsHidden;
-        if(isDetailsHidden) {
-            paper.classList.add('hide-details');
-        } else {
-            paper.classList.remove('hide-details');
-        }
-        updateDetailsButton();
+        paper.classList.toggle('clean-view');
     }
-
-    function updateDetailsButton() {
-        const btn = document.getElementById('toggleDetailsBtn');
-        btn.textContent = isDetailsHidden ? t('btn_show_all') : t('btn_show_text_only');
-    }
-
+    
     function exportWord() {
-        const project = getActiveProject();
-        const content = document.getElementById('previewPaper').innerHTML;
-        
-        const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>";
-        const postHtml = "</body></html>";
-        const html = preHtml + content + postHtml;
-
-        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-        const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
-        const downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        
-        if(navigator.msSaveOrOpenBlob ){
-            navigator.msSaveOrOpenBlob(blob, project.name + ".doc");
-        } else {
-            downloadLink.href = url;
-            downloadLink.download = project.name + ".doc";
-            downloadLink.click();
-        }
-        document.body.removeChild(downloadLink);
+        const proj = getActiveProject();
+        if(!proj) return;
+        const html = document.getElementById('previewPaper').innerHTML;
+        const pre = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Doc</title></head><body>";
+        const post = "</body></html>";
+        const blob = new Blob(['\ufeff', pre + html + post], {type: 'application/msword'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = proj.name + ".doc";
+        a.click();
     }
-
-    function saveData(showAlert = false) { 
-        localStorage.setItem('yazarAparatV5', JSON.stringify(appData)); 
-        if(showAlert) alert(t('alert_save_success')); 
+    
+    function toggleBulk() { const b = document.getElementById('bulkArea'); b.style.display = b.style.display==='block'?'none':'block'; }
+    
+    function processBulk() {
+        const proj = getActiveProject();
+        if(!proj) return;
+        const txt = document.getElementById('bulkTextInput').value;
+        if(!txt.trim()) return;
+        txt.split('\n').forEach(l => { if(l.trim()) proj.items.push({text:l, showContent:true}) });
+        saveData(); renderList(); toggleBulk(); document.getElementById('bulkTextInput').value='';
     }
-    function loadData() {
-        const raw = localStorage.getItem('yazarAparatV5');
-        if(raw) { appData = JSON.parse(raw); } 
-        else { const oldRaw = localStorage.getItem('yazarAparatV4'); if(oldRaw) appData = JSON.parse(oldRaw); }
+    
+    function toggleAll(k) { 
+        const proj = getActiveProject();
+        if(!proj) return;
+        proj.items.forEach(i => i['show'+k.charAt(0).toUpperCase()+k.slice(1)] = !i['show'+k.charAt(0).toUpperCase()+k.slice(1)]); 
+        saveData(); renderList(); 
     }
 </script>
 </body>
